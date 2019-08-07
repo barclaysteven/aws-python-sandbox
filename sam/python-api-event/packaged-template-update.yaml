@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'An example RESTful service
+
+  '
+Resources:
+  ExampleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: index.handler
+      Events:
+        CreateCustomers:
+          Type: Api
+          Properties:
+            Path: /customers
+            Method: post
+        Customer:
+          Type: Api
+          Properties:
+            Path: /customers/{customer}
+            Method: any
+        DeleteCustomer:
+          Type: Api
+          Properties:
+            Path: /customers/{customer}
+            Method: delete
+      CodeUri: s3://adhoc-p1-barclays-ecr-poc/dc9b44d48ceae0d0039b902de3915d28
+  AnotherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: another-handler.handler
+      Events:
+        ListCustomers:
+          Type: Api
+          Properties:
+            Path: /customers
+            Method: get
+      CodeUri: s3://adhoc-p1-barclays-ecr-poc/dc9b44d48ceae0d0039b902de3915d28

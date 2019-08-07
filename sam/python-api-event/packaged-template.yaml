@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'An example RESTful service
+
+  '
+Resources:
+  AnotherFunction:
+    Properties:
+      CodeUri: s3://adhoc-p1-barclays-ami-bakery-artifact-bucket/7fffeb441978a64aa24fea1da9543ee9
+      Events:
+        ListCustomers:
+          Properties:
+            Method: get
+            Path: /customers
+          Type: Api
+      Handler: another-handler.handler
+      Runtime: python3.6
+    Type: AWS::Serverless::Function
+  ExampleFunction:
+    Properties:
+      CodeUri: s3://adhoc-p1-barclays-ami-bakery-artifact-bucket/7fffeb441978a64aa24fea1da9543ee9
+      Events:
+        CreateCustomers:
+          Properties:
+            Method: post
+            Path: /customers
+          Type: Api
+        Customer:
+          Properties:
+            Method: any
+            Path: /customers/{customer}
+          Type: Api
+      Handler: index.handler
+      Runtime: python3.6
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

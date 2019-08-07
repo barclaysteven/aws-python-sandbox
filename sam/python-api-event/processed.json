@@ -1,0 +1,254 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "An example RESTful service\n",
+  "Resources": {
+    "ExampleFunctionCustomerPermissionTest": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "ExampleFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/customers/{customer}", {
+            "__Stage__": "*",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    },
+    "ServerlessRestApiDeployment6acb409bef": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "ServerlessRestApi"
+        },
+        "Description": "RestApi deployment id: 6acb409beff1bb0273f5148a0ea99416d8a41f57",
+        "StageName": "Stage"
+      }
+    },
+    "ExampleFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Code": {
+          "S3Bucket": "adhoc-p1-barclays-ami-bakery-artifact-bucket",
+          "S3Key": "7fffeb441978a64aa24fea1da9543ee9"
+        },
+        "Role": {
+          "Fn::GetAtt": ["ExampleFunctionRole", "Arn"]
+        },
+        "Runtime": "python3.6",
+        "Tags": [{
+          "Value": "SAM",
+          "Key": "lambda:createdBy"
+        }]
+      }
+    },
+    "ExampleFunctionCreateCustomersPermissionProd": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "ExampleFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/customers", {
+            "__Stage__": "Prod",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    },
+    "AnotherFunctionListCustomersPermissionProd": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "AnotherFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/customers", {
+            "__Stage__": "Prod",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    },
+    "AnotherFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "another-handler.handler",
+        "Code": {
+          "S3Bucket": "adhoc-p1-barclays-ami-bakery-artifact-bucket",
+          "S3Key": "7fffeb441978a64aa24fea1da9543ee9"
+        },
+        "Role": {
+          "Fn::GetAtt": ["AnotherFunctionRole", "Arn"]
+        },
+        "Runtime": "python3.6",
+        "Tags": [{
+          "Value": "SAM",
+          "Key": "lambda:createdBy"
+        }]
+      }
+    },
+    "ExampleFunctionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Action": ["sts:AssumeRole"],
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["lambda.amazonaws.com"]
+            }
+          }]
+        }
+      }
+    },
+    "ServerlessRestApiProdStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "ServerlessRestApiDeployment6acb409bef"
+        },
+        "RestApiId": {
+          "Ref": "ServerlessRestApi"
+        },
+        "StageName": "Prod"
+      }
+    },
+    "ExampleFunctionCreateCustomersPermissionTest": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "ExampleFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/customers", {
+            "__Stage__": "*",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    },
+    "ExampleFunctionCustomerPermissionProd": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "ExampleFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/customers/{customer}", {
+            "__Stage__": "Prod",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    },
+    "ServerlessRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Body": {
+          "info": {
+            "version": "1.0",
+            "title": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          "paths": {
+            "/customers": {
+              "post": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ExampleFunction.Arn}/invocations"
+                  }
+                },
+                "responses": {}
+              },
+              "get": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AnotherFunction.Arn}/invocations"
+                  }
+                },
+                "responses": {}
+              }
+            },
+            "/customers/{customer}": {
+              "x-amazon-apigateway-any-method": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ExampleFunction.Arn}/invocations"
+                  }
+                },
+                "responses": {}
+              }
+            }
+          },
+          "swagger": "2.0"
+        }
+      }
+    },
+    "AnotherFunctionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Action": ["sts:AssumeRole"],
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["lambda.amazonaws.com"]
+            }
+          }]
+        }
+      }
+    },
+    "AnotherFunctionListCustomersPermissionTest": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "AnotherFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": ["arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/customers", {
+            "__Stage__": "*",
+            "__ApiId__": {
+              "Ref": "ServerlessRestApi"
+            }
+          }]
+        }
+      }
+    }
+  }
+}

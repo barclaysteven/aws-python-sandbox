@@ -1,0 +1,174 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Custom API gateway with multiple lambdas
+
+Resources:
+
+  SingleMovieFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: single-movie.handler
+      Events:
+        AddMovie:
+          Type: Api
+          Properties:
+            Path: /movies
+            Method: POST
+            RestApiId: !Ref MovieApi
+        GetMovie:
+          Type: Api
+          Properties:
+            Path: /movies/{id}
+            Method: GET
+            RestApiId: !Ref MovieApi
+        DeleteMovie:
+          Type: Api
+          Properties:
+            Path: /movies/{id}
+            Method: DELETE
+            RestApiId: !Ref MovieApi
+      CodeUri: .
+
+  AllMoviesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: all-movies.handler
+      Events:
+        GetMovies:
+          Type: Api
+          Properties:
+            Path: /movies
+            Method: GET
+            RestApiId: !Ref MovieApi
+      CodeUri: .
+
+  MovieApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: Movie Api
+      StageName: v1
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "2018-04-20T11:51:42Z"
+          title: "Movie Api"
+        basePath: "/v1"
+        schemes:
+          - "https"
+        paths:
+          /movies:
+            get:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/AllMovies"
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                type: aws_proxy
+                paasthroughBehavior: "when_no_templates"
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AllMoviesFunction.Arn}/invocations
+                responses:
+                  "200":
+                    statusCode: "200"
+                    responseTemplates:
+                      application/json: !Sub |
+                        #set(inputJson = $util.parseJson($input.body))
+                        #set(movieName = "$inputJson.name")
+                        {
+                          "movie_name": "$movieName"
+                        }
+                requestTemplates:
+                  application/json: !Sub |
+                    {
+                      "http-method": "$context.httpMethod"
+                    }
+
+            post:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SingleMovieFunction.Arn}/invocations
+          /movies/{id}:
+            get:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              parameters:
+                -
+                  in: "path"
+                  name: "id"
+                  type: integer
+                  required: true
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: '#/definitions/SingleMovie'
+                "404":
+                  description: "404 response"
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SingleMovieFunction.Arn}/invocations
+            delete:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              parameters:
+                -
+                  in: "path"
+                  name: "id"
+                  type: integer
+                  required: true
+              responses:
+                "204":
+                  description: "204 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                httpMethod: DELETE
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SingleMovieFunction.Arn}/invocations
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+          AllMovies:
+            type: array
+            items:
+              $ref: '#/definitions/SingleMovie'
+          SingleMovie:
+            type: object
+            properties:
+              id:
+                type: string
+              movie_name:
+                type: string
+              description:
+                type: string
+              genre:
+                type: string
+              year:
+                type: string
+
+
