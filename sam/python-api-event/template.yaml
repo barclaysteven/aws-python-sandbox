@@ -17,21 +17,25 @@ Resources:
           Properties:
             Path: /customers
             Method: post
+            RestApiId: !Ref Api
         Customer:
           Type: Api
           Properties:
             Path: /customers/{customer}
             Method: any
+            RestApiId: !Ref Api
         DeleteCustomer:
           Type: Api
           Properties:
             Path: /customers/{customer}
             Method: delete
+            RestApiId: !Ref Api
         Orders:
           Type: Api
           Properties:
             Path: /customers/{customer}/orders
             Method: get
+            RestApiId: !Ref Api
       CodeUri: .
 
   AnotherFunction:
@@ -45,4 +49,18 @@ Resources:
           Properties:
             Path: /customers
             Method: get
+            RestApiId: !Ref Api
       CodeUri: .
+
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: "Prod"
+
+  BasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      BasePath: "adhoc_service"
+      DomainName: "api.fsdpt.org"
+      RestApiId: !Ref Api
+      Stage: "Prod"
